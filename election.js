@@ -56,21 +56,20 @@ function checkForChanges(json) {
             res[state].votes = {};
             sData.cand.forEach(function (candData) { res[state].votes[candData.name] = candData.votes });
         } else {
-            // Cache will be updated when it prints
             printState(sData, res[state]);
+            res[state].tv = sData.tv;            
         }
     });
 
     res.created = json.meta.created;
 
-    if (changed)
+    if (first || changed)
         console.log();
 }
 
 function printState(newData, oldData) {
     if (oldData != null) {
         console.log("  Total Votes:", comma(newData.tv), "+" + comma(newData.tv - oldData.tv));
-        res[state].tv = sData.tv;
     } else {
         console.log("  Total Votes:", comma(newData.tv));
     }
