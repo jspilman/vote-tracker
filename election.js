@@ -33,6 +33,7 @@ function checkForChanges(json) {
     if (res && res.created == json.meta.created)
         return;
 
+    var changed = false;
     var first = res == null;
     careAbout.forEach(function (state) {
         var sData = json.data[state];
@@ -40,6 +41,7 @@ function checkForChanges(json) {
             console.log(state, "NEW");
         } else if (sData.tv != res[state].tv) {
             console.log(state, "UPDATE");
+            changed = true;
         } else {
             return;
         }
@@ -60,20 +62,35 @@ function checkForChanges(json) {
     });
 
     res.created = json.meta.created;
-    console.log();
+
+    if (changed)
+        console.log();
 }
 
 function printState(newData, oldData) {
-    console.log("  Total Votes:", newData.tv, (oldData != null ? newData.tv - oldData.tv : ""));
+    if (oldData != null) {
+        console.log("  Total Votes:", comma(newData.tv), "+" + comma(newData.tv - oldData.tv));
+        res[state].tv = sData.tv;
+    } else {
+        console.log("  Total Votes:", comma(newData.tv));
+    }
 
     newData.cand.forEach(function (candData) {
         if (oldData != null) {
-            console.log("  " + candData.name + ":", candData.votes, "+" + (candData.votes - oldData.votes[candData.name]));
+            console.log("  " + candData.name + ":", comma(candData.votes), "+" + comma(candData.votes - oldData.votes[candData.name]));
             oldData.votes[candData.name] = candData.votes;
         } else {
-            console.log("  " + candData.name + ":", candData.votes);
+            console.log("  " + candData.name + ":", comma(candData.votes));
         }
     })
+}
+
+function comma(x) {
+    x = x.toString();
+    var pattern = /(-?\d+)(\d{3})/;
+    while (pattern.test(x))
+        x = x.replace(pattern, "$1,$2");
+    return x;
 }
 
 getUpdate();
