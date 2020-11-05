@@ -30,40 +30,49 @@ function getUpdate() {
 }
 
 function checkForChanges(json) {
-    if (res && res.meta.created == json.meta.created)
+    if (res && res.created == json.meta.created)
         return;
 
+    var first = res == null;
     careAbout.forEach(function (state) {
         var sData = json.data[state];
-        if (!res || !res[state] || sData.tv != res[state].tv) {
-            console.log(state, "NEW/UPDATED");
+        if (res == null || res[state] == null) {
+            console.log(state, "NEW");
+        } else if (sData.tv != res[state].tv) {
+            console.log(state, "UPDATE");
+        } else {
+            return;
+        }
 
-            if (res == null) {
-                printState(sData, null);
+        if (first) {
+            printState(sData, null);
 
-                // Init first time through (messy because we are caching as a hash instead of an array)
-                res = {};
-                res[state] = {}
-                res[state].tv = sData.tv;
-                res[state].votes = {};
-                sData.cand.forEach(function (candData) { res[state].votes[candData.name] = candData.votes });
-
-                console.log(res);
-            } else {
-                // Cache will be updated when it prints
-                printState(sData, res[state]);
-            }
+            // Init first time through (messy because we are caching as a hash instead of an array)
+            res = res || {};
+            res[state] = {}
+            res[state].tv = sData.tv;
+            res[state].votes = {};
+            sData.cand.forEach(function (candData) { res[state].votes[candData.name] = candData.votes });
+        } else {
+            // Cache will be updated when it prints
+            printState(sData, res[state]);
         }
     });
+
+    res.created = json.meta.created;
+    console.log();
 }
 
 function printState(newData, oldData) {
-    console.log("  Total Votes:", newData.tv, (oldData ? newData.tv - oldData.tv : ""));
+    console.log("  Total Votes:", newData.tv, (oldData != null ? newData.tv - oldData.tv : ""));
 
     newData.cand.forEach(function (candData) {
-        console.log("  " + candData.name + ":", candData.votes, (oldData ? "+" + (candData.votes - oldData.votes[candData]) : ""));
-        if (oldData)
+        if (oldData != null) {
+            console.log("  " + candData.name + ":", candData.votes, "+" + (candData.votes - oldData.votes[candData.name]));
             oldData.votes[candData.name] = candData.votes;
+        } else {
+            console.log("  " + candData.name + ":", candData.votes);
+        }
     })
 }
 
