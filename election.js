@@ -40,7 +40,7 @@ function checkForChanges(json) {
         if (res == null || res[state] == null) {
             console.log(state, "NEW");
         } else if (sData.tv != res[state].tv) {
-            console.log(state, "UPDATE");
+            console.log(state, "UPDATE", " - ", timestamp());
             changed = true;
         } else {
             return;
@@ -74,14 +74,36 @@ function printState(newData, oldData) {
         console.log("  Total Votes:", comma(newData.tv));
     }
 
+    var newFirst, newSecond;
+    var oldFirst, oldSecond;
+
     newData.cand.forEach(function (candData) {
         if (oldData != null) {
-            console.log("  " + candData.name + ":", comma(candData.votes), "+" + comma(candData.votes - oldData.votes[candData.name]));
+            console.log("  " + candData.name + ":", comma(candData.votes), "(+" + comma(candData.votes - oldData.votes[candData.name]) + ")");
+            if (newFirst == null) {
+                newFirst = candData.votes;
+                oldFirst = oldData.votes[candData.name];
+            } else if (newSecond == null) {
+                newSecond = candData.votes;
+                oldSecond = oldData.votes[candData.name];
+            }
             oldData.votes[candData.name] = candData.votes;
         } else {
             console.log("  " + candData.name + ":", comma(candData.votes));
+            if (newFirst == null) {
+                newFirst = candData.votes;
+            } else if (newSecond == null) {
+                newSecond = candData.votes;
+            }
         }
     })
+
+    if (oldData != null) {
+        var diff = newFirst - newSecond - oldFirst + oldSecond;
+        console.log("  Lead By:", comma(newFirst - newSecond), (diff > 0 ? "(+" : "(") + comma(diff) + ")");
+    } else {
+        console.log("  Lead By:", comma(newFirst - newSecond));
+    }
 }
 
 function comma(x) {
@@ -90,6 +112,20 @@ function comma(x) {
     while (pattern.test(x))
         x = x.replace(pattern, "$1,$2");
     return x;
+}
+
+function timestamp() {
+    let date = new Date();
+    let day = intTwoChars(date.getDate());
+    let month = intTwoChars(date.getMonth() + 1);
+    let hours = intTwoChars(date.getHours());
+    let minutes = intTwoChars(date.getMinutes());
+    let seconds = intTwoChars(date.getSeconds());
+    return `${month}/${day} ${hours}:${minutes}:${seconds}`;    
+}
+
+function intTwoChars(i) {
+    return (`0${i}`).slice(-2);
 }
 
 getUpdate();
